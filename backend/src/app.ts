@@ -1,3 +1,4 @@
+// backend/src/app.ts
 import express from 'express'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
@@ -7,6 +8,7 @@ import { connectDB } from './config/database'
 import config from './config/env'
 import { errorHandler, notFoundHandler } from './middleware/error.middleware'
 import { authRoutes } from './routes/auth.routes'
+import { workflowRoutes } from './routes/workflow.routes'
 
 const app = express()
 
@@ -41,6 +43,7 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes)
+app.use('/api/workflows', workflowRoutes)
 
 // 404 Handler
 app.use(notFoundHandler)
@@ -55,6 +58,7 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`)
   console.log(`📁 Environment: ${config.NODE_ENV}`)
   console.log(`🔗 Health check: http://localhost:${PORT}/health`)
+  console.log(`📊 Workflow API: http://localhost:${PORT}/api/workflows`)
 })
 
 // Graceful shutdown
