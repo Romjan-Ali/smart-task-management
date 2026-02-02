@@ -3,9 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useLoginMutation } from '@/store/api/authApi';
-import { useAppDispatch } from '@/hooks/redux';
-import { setUser } from '@/store/slices/authSlice';
+import { signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,8 +12,7 @@ import { toast } from 'sonner';
 
 export default function LoginPage() {
   const router = useRouter();
-  const dispatch = useAppDispatch();
-  const [login, { isLoading }] = useLoginMutation();
+  const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -24,20 +21,26 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
     try {
-      const result = await login(formData).unwrap();
-      
-      if (result.success && result.data) {
-        dispatch(setUser(result.data.user));
+      const result = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast.error(result.error);
+      } else if (result?.ok) {
         toast.success('Login successful!');
         router.push('/dashboard');
+        router.refresh();
       }
-    } catch (error: unknown) {
-      const errorMessage = error && typeof error === 'object' && 'data' in error 
-        ? (error.data as { error?: string })?.error || 'Login failed'
-        : 'Login failed';
-      toast.error(errorMessage);
+    } catch (error) {
+      toast.error('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
