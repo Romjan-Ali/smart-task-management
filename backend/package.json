@@ -10,9 +10,10 @@
     "start": "bun run src/app.ts",
     "clean": "rm -rf dist",
     "seed:admin": "bun run scripts/seedAdmin.ts",
-    "seed:user": "bun run scripts/seedUser.ts",
+    "seed:user": "bun run scripts/seedUsers.ts",
     "seed:workflows": "bun run scripts/seedWorkflows.ts",
-    "seed:all": "bun run seed:admin && bun run seed:user && bun run seed:workflows",
+    "seed:tasks": "bun run scripts/seedTasks.ts",
+    "seed:all": "bun run seed:admin && bun run seed:user && bun run seed:workflows && bun run seed:tasks",
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit"
   },

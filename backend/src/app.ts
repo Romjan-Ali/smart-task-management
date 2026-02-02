@@ -9,6 +9,7 @@ import config from './config/env'
 import { errorHandler, notFoundHandler } from './middleware/error.middleware'
 import { authRoutes } from './routes/auth.routes'
 import { workflowRoutes } from './routes/workflow.routes'
+import { taskRoutes } from './routes/task.routes'
 
 const app = express()
 
@@ -44,6 +45,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/workflows', workflowRoutes)
+app.use('/api/tasks', taskRoutes)
 
 // 404 Handler
 app.use(notFoundHandler)
@@ -59,6 +61,7 @@ app.listen(PORT, () => {
   console.log(`📁 Environment: ${config.NODE_ENV}`)
   console.log(`🔗 Health check: http://localhost:${PORT}/health`)
   console.log(`📊 Workflow API: http://localhost:${PORT}/api/workflows`)
+  console.log(`📝 Task API: http://localhost:${PORT}/api/tasks`)
 })
 
 // Graceful shutdown
