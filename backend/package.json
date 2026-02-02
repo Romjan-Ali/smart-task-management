@@ -13,7 +13,8 @@
     "seed:user": "bun run scripts/seedUsers.ts",
     "seed:workflows": "bun run scripts/seedWorkflows.ts",
     "seed:tasks": "bun run scripts/seedTasks.ts",
-    "seed:all": "bun run seed:admin && bun run seed:user && bun run seed:workflows && bun run seed:tasks",
+    "seed:notifications": "bun run scripts/seedNotifications.ts",
+    "seed:all": "bun run seed:admin && bun run seed:user && bun run seed:workflows && bun run seed:tasks && bun run seed:notifications",
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit"
   },

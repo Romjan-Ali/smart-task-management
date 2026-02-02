@@ -10,6 +10,8 @@ import { errorHandler, notFoundHandler } from './middleware/error.middleware'
 import { authRoutes } from './routes/auth.routes'
 import { workflowRoutes } from './routes/workflow.routes'
 import { taskRoutes } from './routes/task.routes'
+import { notificationRoutes } from './routes/notification.routes'
+import { analyticsRoutes } from './routes/analytics.routes'
 
 const app = express()
 
@@ -46,6 +48,8 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/workflows', workflowRoutes)
 app.use('/api/tasks', taskRoutes)
+app.use('/api/notifications', notificationRoutes)
+app.use('/api/analytics', analyticsRoutes)
 
 // 404 Handler
 app.use(notFoundHandler)
@@ -62,6 +66,8 @@ app.listen(PORT, () => {
   console.log(`🔗 Health check: http://localhost:${PORT}/health`)
   console.log(`📊 Workflow API: http://localhost:${PORT}/api/workflows`)
   console.log(`📝 Task API: http://localhost:${PORT}/api/tasks`)
+  console.log(`🔔 Notification API: http://localhost:${PORT}/api/notifications`)
+  console.log(`📈 Analytics API: http://localhost:${PORT}/api/analytics`)
 })
 
 // Graceful shutdown

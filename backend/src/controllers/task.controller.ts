@@ -4,6 +4,7 @@ import type { AuthRequest } from '../types'
 import { Task } from '../models/Task'
 import { Workflow } from '../models/Workflow'
 import { TaskService } from '../services/task.service'
+import { AutomationService } from '../services/automation.service'
 import { Types } from 'mongoose'
 
 export const taskController = {
@@ -453,8 +454,16 @@ export const taskController = {
 
         await task.save()
 
-        // Auto-complete if moved to final stage
-        await TaskService.autoCompleteTask(id, req.user.userId)
+        // Trigger automation: auto-complete and notify
+        await AutomationService.handleTaskCompletion(id, req.user.userId)
+        
+        // Notify users about stage change
+        await AutomationService.notifyStageChange(
+          id,
+          oldStage?.name || 'Unknown',
+          newStage?.name || 'Unknown',
+          req.user.userId
+        )
       }
 
       // Reload task with populated fields
@@ -535,6 +544,9 @@ export const taskController = {
           )
         )
         await task.save()
+
+        // Notify newly assigned users
+        await AutomationService.notifyTaskAssignment(id, newUsers, req.user.userId)
       }
 
       // Populate and return
