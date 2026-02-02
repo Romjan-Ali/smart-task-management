@@ -1,0 +1,140 @@
+{
+  "client": "Thunder Client",
+  "collectionName": "Task Management API",
+  "dateExported": "2024-01-01",
+  "version": "1.1",
+  "folders": [
+    {
+      "id": "auth-folder",
+      "name": "Authentication",
+      "containerId": "",
+      "created": "2024-01-01T00:00:00.000Z",
+      "sortNum": 10000
+    }
+  ],
+  "requests": [
+    {
+      "id": "register-request",
+      "colId": "task-management",
+      "containerId": "auth-folder",
+      "name": "Register User",
+      "url": "{{baseUrl}}/auth/register",
+      "method": "POST",
+      "sortNum": 10,
+      "created": "2024-01-01T00:00:00.000Z",
+      "modified": "2024-01-01T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"Password@123\",\n  \"name\": \"New User\",\n  \"role\": \"member\"\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "id": "login-request",
+      "colId": "task-management",
+      "containerId": "auth-folder",
+      "name": "Login",
+      "url": "{{baseUrl}}/auth/login",
+      "method": "POST",
+      "sortNum": 20,
+      "created": "2024-01-01T00:00:00.000Z",
+      "modified": "2024-01-01T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"email\": \"admin@taskflow.com\",\n  \"password\": \"Admin@123\"\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "id": "get-profile-request",
+      "colId": "task-management",
+      "containerId": "auth-folder",
+      "name": "Get Profile",
+      "url": "{{baseUrl}}/auth/profile",
+      "method": "GET",
+      "sortNum": 30,
+      "created": "2024-01-01T00:00:00.000Z",
+      "modified": "2024-01-01T00:00:00.000Z",
+      "headers": [],
+      "tests": []
+    },
+    {
+      "id": "update-profile-request",
+      "colId": "task-management",
+      "containerId": "auth-folder",
+      "name": "Update Profile",
+      "url": "{{baseUrl}}/auth/profile",
+      "method": "PATCH",
+      "sortNum": 40,
+      "created": "2024-01-01T00:00:00.000Z",
+      "modified": "2024-01-01T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"name\": \"Updated Name\"\n}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "id": "refresh-token-request",
+      "colId": "task-management",
+      "containerId": "auth-folder",
+      "name": "Refresh Token",
+      "url": "{{baseUrl}}/auth/refresh",
+      "method": "POST",
+      "sortNum": 50,
+      "created": "2024-01-01T00:00:00.000Z",
+      "modified": "2024-01-01T00:00:00.000Z",
+      "headers": [],
+      "body": {
+        "type": "json",
+        "raw": "{}",
+        "form": []
+      },
+      "tests": []
+    },
+    {
+      "id": "logout-request",
+      "colId": "task-management",
+      "containerId": "auth-folder",
+      "name": "Logout",
+      "url": "{{baseUrl}}/auth/logout",
+      "method": "POST",
+      "sortNum": 60,
+      "created": "2024-01-01T00:00:00.000Z",
+      "modified": "2024-01-01T00:00:00.000Z",
+      "headers": [],
+      "body": {
+        "type": "json",
+        "raw": "{}",
+        "form": []
+      },
+      "tests": []
+    }
+  ],
+  "settings": {
+    "options": {
+      "baseUrl": "http://localhost:3000/api"
+    }
+  }
+}
