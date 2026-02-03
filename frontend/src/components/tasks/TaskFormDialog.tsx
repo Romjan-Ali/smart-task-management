@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useCreateTaskMutation, useUpdateTaskMutation } from '@/store/api/taskApi';
 import { useGetDefaultWorkflowsQuery } from '@/store/api/workflowApi';
+import { useGetUsersQuery } from '@/store/api/userApi';
 import {
   Dialog,
   DialogContent,
@@ -15,33 +16,43 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { toast } from 'sonner';
-import type { Task, TaskPriority } from '@/types';
+import type { Task, TaskPriority, User } from '@/types';
 
 interface TaskFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task?: Task | null;
+  initialTask?: Task;
   defaultWorkflowId?: string;
 }
 
-export function TaskFormDialog({ open, onOpenChange, task, defaultWorkflowId }: TaskFormDialogProps) {
+export function TaskFormDialog({ open, onOpenChange, task, initialTask, defaultWorkflowId }: TaskFormDialogProps) {
   const [createTask, { isLoading: isCreating }] = useCreateTaskMutation();
   const [updateTask, { isLoading: isUpdating }] = useUpdateTaskMutation();
   const { data: workflowsData } = useGetDefaultWorkflowsQuery();
+  const { data: usersData } = useGetUsersQuery();
 
-  const isEditing = !!task;
+  const editingTask = task || initialTask;
+  const isEditing = !!editingTask;
   const isLoading = isCreating || isUpdating;
 
   // Initialize form data based on task or defaults
   const initialFormData = useMemo(() => {
-    if (task) {
+    if (editingTask) {
+      // Extract assigned user IDs
+      const assignedUserIds = editingTask.assignedTo.map((user) =>
+        typeof user === 'string' ? user : user._id
+      );
+      
       return {
-        title: task.title,
-        description: task.description || '',
-        priority: task.priority,
-        workflowId: typeof task.workflow === 'string' ? task.workflow : task.workflow._id,
-        dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+        title: editingTask.title,
+        description: editingTask.description || '',
+        priority: editingTask.priority,
+        workflowId: typeof editingTask.workflow === 'string' ? editingTask.workflow : editingTask.workflow._id,
+        assignedTo: assignedUserIds,
+        dueDate: editingTask.dueDate ? new Date(editingTask.dueDate).toISOString().split('T')[0] : '',
       };
     }
     return {
@@ -49,9 +60,10 @@ export function TaskFormDialog({ open, onOpenChange, task, defaultWorkflowId }: 
       description: '',
       priority: 'medium' as TaskPriority,
       workflowId: defaultWorkflowId || workflowsData?.data?.[0]?._id || '',
+      assignedTo: [] as string[],
       dueDate: '',
     };
-  }, [task, defaultWorkflowId, workflowsData]);
+  }, [editingTask, defaultWorkflowId, workflowsData]);
 
   const [formData, setFormData] = useState(initialFormData);
 
@@ -79,13 +91,14 @@ export function TaskFormDialog({ open, onOpenChange, task, defaultWorkflowId }: 
         ? new Date(formData.dueDate + 'T00:00:00.000Z').toISOString()
         : undefined;
 
-      if (isEditing && task) {
+      if (isEditing && editingTask) {
         await updateTask({
-          id: task._id,
+          id: editingTask._id,
           data: {
             title: formData.title,
             description: formData.description || undefined,
             priority: formData.priority,
+            assignedTo: formData.assignedTo.length > 0 ? formData.assignedTo : undefined,
             dueDate: dueDateISO,
           },
         }).unwrap();
@@ -96,6 +109,7 @@ export function TaskFormDialog({ open, onOpenChange, task, defaultWorkflowId }: 
           description: formData.description || undefined,
           priority: formData.priority,
           workflowId: formData.workflowId,
+          assignedTo: formData.assignedTo.length > 0 ? formData.assignedTo : undefined,
           dueDate: dueDateISO,
         }).unwrap();
         toast.success('Task created successfully');
@@ -135,20 +149,19 @@ export function TaskFormDialog({ open, onOpenChange, task, defaultWorkflowId }: 
       description: '',
       priority: 'medium',
       workflowId: defaultWorkflowId || workflowsData?.data?.[0]?._id || '',
+      assignedTo: [],
       dueDate: '',
     });
   };
 
   const handleClose = () => {
     onOpenChange(false);
-    if (!isEditing) {
-      resetForm();
-    }
+    resetForm();
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Task' : 'Create New Task'}</DialogTitle>
           <DialogDescription>
@@ -174,10 +187,13 @@ export function TaskFormDialog({ open, onOpenChange, task, defaultWorkflowId }: 
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">
+              Description
+              <span className="text-xs text-muted-foreground ml-2">(Markdown supported)</span>
+            </Label>
             <textarea
               id="description"
-              placeholder="Enter task description (optional)"
+              placeholder="Enter task description (optional). Supports **bold**, *italic*, lists, etc."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               disabled={isLoading}
@@ -228,6 +244,23 @@ export function TaskFormDialog({ open, onOpenChange, task, defaultWorkflowId }: 
               </Select>
             </div>
           )}
+
+          {/* Assign Users */}
+          <div className="space-y-2">
+            <Label htmlFor="assignedTo">Assign To</Label>
+            <MultiSelect
+              options={
+                usersData?.data?.map((user) => ({
+                  label: `${user.name} (${user.email})`,
+                  value: user._id,
+                })) || []
+              }
+              selected={formData.assignedTo}
+              onChange={(selected) => setFormData({ ...formData, assignedTo: selected })}
+              placeholder="Select users to assign..."
+              disabled={isLoading}
+            />
+          </div>
 
           {/* Due Date */}
           <div className="space-y-2">

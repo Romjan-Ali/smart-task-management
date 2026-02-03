@@ -5,9 +5,10 @@ import type { Task } from '@/types';
 
 interface SortableTaskCardProps {
   task: Task;
+  onDoubleClick?: (task: Task) => void;
 }
 
-export function SortableTaskCard({ task }: SortableTaskCardProps) {
+export function SortableTaskCard({ task, onDoubleClick }: SortableTaskCardProps) {
   const {
     attributes,
     listeners,
@@ -24,7 +25,7 @@ export function SortableTaskCard({ task }: SortableTaskCardProps) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <TaskCard task={task} isDragging={isDragging} />
+      <TaskCard task={task} isDragging={isDragging} onDoubleClick={onDoubleClick} />
     </div>
   );
 }

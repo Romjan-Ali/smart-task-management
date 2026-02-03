@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Trash2 } from 'lucide-react';
+import { Plus, X, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Workflow } from '@/types';
 
@@ -109,6 +109,14 @@ export function WorkflowEditDialog({ workflow, open, onOpenChange }: WorkflowEdi
     setStages(newStages);
   };
 
+  const moveStage = (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= stages.length) return;
+    const updated = [...stages];
+    [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
+    setStages(updated.map((s, i) => ({ ...s, order: i })));
+  };
+
   const handleSave = async () => {
     if (!formData.name.trim()) {
       toast.error('Workflow name is required');
@@ -180,7 +188,7 @@ export function WorkflowEditDialog({ workflow, open, onOpenChange }: WorkflowEdi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" showCloseButton={false}>
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -297,6 +305,30 @@ export function WorkflowEditDialog({ workflow, open, onOpenChange }: WorkflowEdi
                         className="w-4 h-4 rounded-full border"
                         style={{ backgroundColor: stage.color }}
                       />
+                      <div className="ml-auto flex gap-1">
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => moveStage(index, 'up')}
+                          disabled={isUpdating || workflow.isDefault || index === 0}
+                          className="h-8 w-8"
+                          aria-label="Move stage up"
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => moveStage(index, 'down')}
+                          disabled={isUpdating || workflow.isDefault || index === stages.length - 1}
+                          className="h-8 w-8"
+                          aria-label="Move stage down"
+                        >
+                          <ArrowDown className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   {!workflow.isDefault && stages.length > 2 && (

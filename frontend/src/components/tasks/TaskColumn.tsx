@@ -9,9 +9,10 @@ import { SortableTaskCard } from './SortableTaskCard';
 interface TaskColumnProps {
   stage: WorkflowStage;
   tasks: Task[];
+  onTaskDoubleClick?: (task: Task) => void;
 }
 
-export function TaskColumn({ stage, tasks }: TaskColumnProps) {
+export function TaskColumn({ stage, tasks, onTaskDoubleClick }: TaskColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: stage._id,
   });
@@ -35,18 +36,20 @@ export function TaskColumn({ stage, tasks }: TaskColumnProps) {
       {/* Tasks Container */}
       <Card
         ref={setNodeRef}
-        className={`flex-1 p-2 md:p-3 space-y-2 md:space-y-3 overflow-y-auto transition-colors ${
+        className={`flex-1 p-2 md:p-3 overflow-y-auto transition-colors min-h-[200px] ${
           isOver ? 'bg-accent/50 border-primary' : ''
         }`}
       >
         <SortableContext items={tasks.map((t) => t._id)} strategy={verticalListSortingStrategy}>
-          {tasks.length === 0 ? (
-            <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
-              No tasks
-            </div>
-          ) : (
-            tasks.map((task) => <SortableTaskCard key={task._id} task={task} />)
-          )}
+          <div className="space-y-2 md:space-y-3 min-h-full">
+            {tasks.length === 0 ? (
+              <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
+                No tasks
+              </div>
+            ) : (
+              tasks.map((task) => <SortableTaskCard key={task._id} task={task} onDoubleClick={onTaskDoubleClick} />)
+            )}
+          </div>
         </SortableContext>
       </Card>
     </div>

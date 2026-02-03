@@ -52,14 +52,44 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       // Add user data to token on sign in
       if (user) {
         token.id = user.id;
         token.email = user.email!;
         token.name = user.name!;
         token.role = user.role;
+        token.accessTokenExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
       }
+
+      // Return previous token if the access token has not expired yet
+      if (Date.now() < (token.accessTokenExpires as number)) {
+        return token;
+      }
+
+      // Access token has expired, try to refresh it
+      try {
+        const response = await fetch(`${apiUrl}/api/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            // Refresh successful, update token expiry
+            token.accessTokenExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
+            return token;
+          }
+        }
+      } catch (error) {
+        console.error('Token refresh failed:', error);
+      }
+
+      // Refresh failed, return token as is (will trigger re-login)
       return token;
     },
     async session({ session, token }) {

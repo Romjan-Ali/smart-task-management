@@ -20,6 +20,7 @@ import { useChangeTaskStageMutation } from '@/store/api/taskApi';
 import { TaskColumn } from '@/components/tasks/TaskColumn';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { TaskFormDialog } from '@/components/tasks/TaskFormDialog';
+import { TaskDetailDialog } from '@/components/tasks/TaskDetailDialog';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus } from 'lucide-react';
@@ -34,6 +35,9 @@ export default function TasksPage() {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   // Fetch data
   const { data: workflowsData, isLoading: workflowsLoading } = useGetDefaultWorkflowsQuery();
@@ -134,18 +138,28 @@ export default function TasksPage() {
     }
   };
 
+  const handleTaskDoubleClick = (task: Task) => {
+    setSelectedTask(task);
+    setIsDetailOpen(true);
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setIsFormOpen(true);
+  };
+
   if (tasksLoading || workflowsLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-[200px]" />
-          <Skeleton className="h-10 w-[120px]" />
+          <Skeleton className="h-8 w-50" />
+          <Skeleton className="h-10 w-30" />
         </div>
         <div className="flex gap-4 overflow-x-auto pb-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="min-w-[300px] space-y-3">
-              <Skeleton className="h-6 w-[150px]" />
-              <Skeleton className="h-[400px] w-full" />
+            <div key={i} className="min-w-75 space-y-3">
+              <Skeleton className="h-6 w-37.5" />
+              <Skeleton className="h-100 w-full" />
             </div>
           ))}
         </div>
@@ -155,7 +169,7 @@ export default function TasksPage() {
 
   if (!selectedWorkflow) {
     return (
-      <div className="flex items-center justify-center h-[400px]">
+      <div className="flex items-center justify-center h-100">
         <p className="text-muted-foreground">No workflows found. Please create a workflow first.</p>
       </div>
     );
@@ -207,6 +221,7 @@ export default function TasksPage() {
               key={stage._id}
               stage={stage}
               tasks={tasksByStage[stage._id] || []}
+              onTaskDoubleClick={handleTaskDoubleClick}
             />
           ))}
         </div>
@@ -216,11 +231,26 @@ export default function TasksPage() {
         </DragOverlay>
       </DndContext>
 
+      {/* Task Detail Dialog */}
+      <TaskDetailDialog
+        task={selectedTask}
+        open={isDetailOpen}
+        onOpenChange={(open) => {
+          setIsDetailOpen(open);
+          if (!open) setSelectedTask(null);
+        }}
+        onEdit={handleEditTask}
+      />
+
       {/* Task Form Dialog */}
       <TaskFormDialog
         open={isFormOpen}
-        onOpenChange={setIsFormOpen}
+        onOpenChange={(open) => {
+          setIsFormOpen(open);
+          if (!open) setEditingTask(null);
+        }}
         defaultWorkflowId={selectedWorkflow._id}
+        initialTask={editingTask || undefined}
       />
     </div>
   );

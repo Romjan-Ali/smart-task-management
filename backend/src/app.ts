@@ -8,6 +8,7 @@ import { connectDB } from './config/database'
 import config from './config/env'
 import { errorHandler, notFoundHandler } from './middleware/error.middleware'
 import { authRoutes } from './routes/auth.routes'
+import { userRoutes } from './routes/user.routes'
 import { workflowRoutes } from './routes/workflow.routes'
 import { taskRoutes } from './routes/task.routes'
 import { notificationRoutes } from './routes/notification.routes'
@@ -46,6 +47,7 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes)
+app.use('/api/users', userRoutes)
 app.use('/api/workflows', workflowRoutes)
 app.use('/api/tasks', taskRoutes)
 app.use('/api/notifications', notificationRoutes)
