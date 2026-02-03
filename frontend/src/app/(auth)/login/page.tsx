@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
+import { loginToBackend } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,29 +25,35 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      });
+      // First, login to backend to get cookies
+      const backendResult = await loginToBackend(formData.email, formData.password);
+      
+      if (backendResult.success) {
+        // Then, create NextAuth session
+        const nextAuthResult = await signIn('credentials', {
+          email: formData.email,
+          password: formData.password,
+          redirect: false,
+        });
 
-      if (result?.error) {
-        toast.error(result.error);
-      } else if (result?.ok) {
-        toast.success('Login successful!');
-        router.push('/dashboard');
-        router.refresh();
+        if (nextAuthResult?.error) {
+          toast.error(nextAuthResult.error);
+        } else if (nextAuthResult?.ok) {
+          toast.success('Login successful!');
+          router.push('/dashboard');
+          router.refresh();
+        }
       }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      toast.error('An unexpected error occurred');
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>

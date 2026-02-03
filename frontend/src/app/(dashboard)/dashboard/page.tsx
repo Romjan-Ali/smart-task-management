@@ -1,5 +1,7 @@
 'use client';
 
+import { useGetDashboardStatsQuery } from '@/store/api/analyticsApi';
+import { useGetTasksQuery } from '@/store/api/taskApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,21 +14,38 @@ import {
   ListTodo,
   Users
 } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import type { Task } from '@/types';
 
 export default function DashboardPage() {
-  // TODO: Replace with actual data from analytics API
-  const stats = {
-    totalTasks: 24,
-    completedTasks: 12,
-    overdueTasks: 3,
-    tasksDueToday: 5,
-    avgCompletionTime: '3.2 days',
-    activeWorkflows: 4,
+  const { data: statsData, isLoading: statsLoading } = useGetDashboardStatsQuery();
+  const { data: tasksData, isLoading: tasksLoading } = useGetTasksQuery({ limit: 5 });
+
+  const stats = statsData?.data;
+  const recentTasks = tasksData?.data || [];
+
+  const formatCompletionTime = (ms: number) => {
+    // Handle invalid or missing data
+    if (!ms || ms <= 0) return 'N/A';
+    
+    const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h`;
+    return 'N/A';
   };
 
-  const isLoading = false; // TODO: Replace with actual loading state
+  const getTaskStageName = (task: Task) => {
+    if (typeof task.currentStage === 'string') return 'Unknown';
+    return task.currentStage.name;
+  };
 
-  if (isLoading) {
+  const getTaskStageColor = (task: Task) => {
+    if (typeof task.currentStage === 'string') return '#6B7280';
+    return task.currentStage.color;
+  };
+
+  if (statsLoading || tasksLoading) {
     return (
       <div className="space-y-6">
         <div>
@@ -51,108 +70,116 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">Overview of your tasks and workflows</p>
+        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h2>
+        <p className="text-sm md:text-base text-muted-foreground">Overview of your tasks and workflows</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <StatCard
           title="Total Tasks"
-          value={stats.totalTasks}
+          value={stats?.totalTasks || 0}
           description="All tasks across workflows"
           icon={ListTodo}
-          trend="+12% from last month"
         />
         <StatCard
           title="Completed Tasks"
-          value={stats.completedTasks}
-          description={`${Math.round((stats.completedTasks / stats.totalTasks) * 100)}% completion rate`}
+          value={stats?.completedCount || 0}
+          description={`${stats?.totalTasks ? Math.round((stats.completedCount / stats.totalTasks) * 100) : 0}% completion rate`}
           icon={CheckCircle2}
-          trend="+8% from last month"
         />
         <StatCard
           title="Overdue Tasks"
-          value={stats.overdueTasks}
+          value={stats?.overdueCount || 0}
           description="Tasks past due date"
           icon={AlertCircle}
         />
         <StatCard
           title="Due Today"
-          value={stats.tasksDueToday}
+          value={stats?.tasksDueToday || 0}
           description="Tasks due by end of day"
           icon={Clock}
         />
         <StatCard
           title="Avg Completion Time"
-          value={stats.avgCompletionTime}
+          value={stats?.avgCompletionTime ? formatCompletionTime(stats.avgCompletionTime) : 'N/A'}
           description="Average time to complete"
           icon={TrendingUp}
         />
         <StatCard
-          title="Active Workflows"
-          value={stats.activeWorkflows}
-          description="Workflows in use"
+          title="Due This Week"
+          value={stats?.tasksDueThisWeek || 0}
+          description="Tasks due within 7 days"
           icon={Users}
         />
       </div>
 
       {/* Recent Activity */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Recent Tasks</CardTitle>
             <CardDescription>Your most recent task updates</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Implement user authentication</p>
-                  <p className="text-xs text-muted-foreground">Updated 2 hours ago</p>
-                </div>
-                <Badge>In Progress</Badge>
+            {recentTasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No tasks yet</p>
+            ) : (
+              <div className="space-y-4">
+                {recentTasks.slice(0, 5).map((task) => (
+                  <div key={task._id} className="flex items-center justify-between">
+                    <div className="space-y-1 flex-1">
+                      <p className="text-sm font-medium line-clamp-1">{task.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Updated {formatDistanceToNow(new Date(task.updatedAt), { addSuffix: true })}
+                      </p>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      style={{
+                        borderColor: getTaskStageColor(task),
+                        color: getTaskStageColor(task),
+                      }}
+                    >
+                      {getTaskStageName(task)}
+                    </Badge>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Design dashboard mockups</p>
-                  <p className="text-xs text-muted-foreground">Updated 5 hours ago</p>
-                </div>
-                <Badge variant="secondary">Done</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Fix API endpoint bugs</p>
-                  <p className="text-xs text-muted-foreground">Updated 1 day ago</p>
-                </div>
-                <Badge variant="destructive">Overdue</Badge>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks and shortcuts</CardDescription>
+            <CardTitle>Tasks by Priority</CardTitle>
+            <CardDescription>Distribution of task priorities</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <button className="w-full text-left px-4 py-2 rounded-lg hover:bg-accent transition-colors">
-                <p className="text-sm font-medium">Create New Task</p>
-                <p className="text-xs text-muted-foreground">Add a task to your workflow</p>
-              </button>
-              <button className="w-full text-left px-4 py-2 rounded-lg hover:bg-accent transition-colors">
-                <p className="text-sm font-medium">View All Tasks</p>
-                <p className="text-xs text-muted-foreground">See your task board</p>
-              </button>
-              <button className="w-full text-left px-4 py-2 rounded-lg hover:bg-accent transition-colors">
-                <p className="text-sm font-medium">Manage Workflows</p>
-                <p className="text-xs text-muted-foreground">Configure your workflows</p>
-              </button>
+            <div className="space-y-3">
+              {stats?.tasksByPriority?.map((item) => (
+                <div key={item.priority} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={
+                        item.priority === 'high'
+                          ? 'destructive'
+                          : item.priority === 'medium'
+                          ? 'default'
+                          : 'secondary'
+                      }
+                    >
+                      {item.priority}
+                    </Badge>
+                  </div>
+                  <span className="text-2xl font-bold">{item.count}</span>
+                </div>
+              )) || (
+                <p className="text-sm text-muted-foreground text-center py-4">No data available</p>
+              )}
             </div>
           </CardContent>
         </Card>

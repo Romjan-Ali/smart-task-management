@@ -17,16 +17,16 @@ export function TaskColumn({ stage, tasks }: TaskColumnProps) {
   });
 
   return (
-    <div className="flex flex-col h-full min-w-[300px] w-[300px]">
+    <div className="flex flex-col h-full min-w-[280px] md:min-w-[300px] w-[280px] md:w-[300px]">
       {/* Column Header */}
-      <div className="flex items-center justify-between mb-4 px-2">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-3 md:mb-4 px-2">
+        <div className="flex items-center gap-2 min-w-0">
           <div
-            className="w-3 h-3 rounded-full"
+            className="w-3 h-3 rounded-full flex-shrink-0"
             style={{ backgroundColor: stage.color || '#6B7280' }}
           />
-          <h3 className="font-semibold text-sm">{stage.name}</h3>
-          <Badge variant="secondary" className="text-xs">
+          <h3 className="font-semibold text-sm truncate">{stage.name}</h3>
+          <Badge variant="secondary" className="text-xs flex-shrink-0">
             {tasks.length}
           </Badge>
         </div>
@@ -35,7 +35,7 @@ export function TaskColumn({ stage, tasks }: TaskColumnProps) {
       {/* Tasks Container */}
       <Card
         ref={setNodeRef}
-        className={`flex-1 p-3 space-y-3 overflow-y-auto transition-colors ${
+        className={`flex-1 p-2 md:p-3 space-y-2 md:space-y-3 overflow-y-auto transition-colors ${
           isOver ? 'bg-accent/50 border-primary' : ''
         }`}
       >

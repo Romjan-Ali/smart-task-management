@@ -41,15 +41,15 @@ export function TaskCard({ task, isDragging }: TaskCardProps) {
         isDragging ? 'opacity-50 rotate-2' : ''
       }`}
     >
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2 md:pb-3">
         <div className="flex items-start justify-between gap-2">
-          <h4 className="font-semibold text-sm line-clamp-2">{task.title}</h4>
-          <Badge variant={getPriorityColor(task.priority)} className="shrink-0">
+          <h4 className="font-semibold text-xs md:text-sm line-clamp-2">{task.title}</h4>
+          <Badge variant={getPriorityColor(task.priority)} className="shrink-0 text-xs">
             {task.priority}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2 md:space-y-3">
         {task.description && (
           <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>
         )}
@@ -57,9 +57,9 @@ export function TaskCard({ task, isDragging }: TaskCardProps) {
         {/* Due Date */}
         {task.dueDate && (
           <div className="flex items-center gap-2 text-xs">
-            <Calendar className="h-3 w-3" />
+            <Calendar className="h-3 w-3 flex-shrink-0" />
             <span className={isOverdue ? 'text-destructive font-medium' : 'text-muted-foreground'}>
-              {format(new Date(task.dueDate), 'MMM d, yyyy')}
+              {format(new Date(task.dueDate), 'MMM d')}
               {isOverdue && ' (Overdue)'}
             </span>
           </div>
@@ -68,12 +68,12 @@ export function TaskCard({ task, isDragging }: TaskCardProps) {
         {/* Assigned Users */}
         {task.assignedTo && task.assignedTo.length > 0 && (
           <div className="flex items-center gap-2">
-            <User className="h-3 w-3 text-muted-foreground" />
+            <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />
             <div className="flex -space-x-2">
               {task.assignedTo.slice(0, 3).map((user, index) => {
                 const userName = typeof user === 'string' ? 'U' : user.name;
                 return (
-                  <Avatar key={index} className="h-6 w-6 border-2 border-background">
+                  <Avatar key={index} className="h-5 w-5 md:h-6 md:w-6 border-2 border-background">
                     <AvatarFallback className="text-xs bg-primary text-primary-foreground">
                       {getInitials(userName)}
                     </AvatarFallback>
@@ -81,7 +81,7 @@ export function TaskCard({ task, isDragging }: TaskCardProps) {
                 );
               })}
               {task.assignedTo.length > 3 && (
-                <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-xs">
+                <div className="flex h-5 w-5 md:h-6 md:w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-xs">
                   +{task.assignedTo.length - 3}
                 </div>
               )}

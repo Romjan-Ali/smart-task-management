@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -52,12 +53,15 @@ export function Header() {
   };
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-card px-6">
-      <div className="flex items-center space-x-4">
-        <h1 className="text-2xl font-semibold">Welcome back, {user?.name?.split(' ')[0] || 'User'}</h1>
+    <header className="flex h-16 items-center justify-between border-b bg-card px-4 md:px-6">
+      <div className="flex items-center space-x-4 flex-1 min-w-0">
+        <h1 className="text-lg md:text-2xl font-semibold truncate">Welcome back, {user?.name?.split(' ')[0] || 'User'}</h1>
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2 md:space-x-4 flex-shrink-0">
+        {/* Notification Bell */}
+        <NotificationBell />
+
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
