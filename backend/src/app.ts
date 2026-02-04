@@ -24,7 +24,7 @@ app.use(helmet())
 app.use(
   cors({
     origin: config.NODE_ENV === 'production' 
-      ? 'https://your-frontend-domain.com'
+      ? config.FRONTEND_URL
       : 'http://localhost:3001',
     credentials: true,
   })
