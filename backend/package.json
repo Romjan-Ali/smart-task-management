@@ -7,7 +7,6 @@
   "scripts": {
     "dev": "bun run --watch src/app.ts",
     "build": "bun install",
-    "postinstall": "prisma generate",
     "start": "bun run src/app.ts",
     "clean": "rm -rf dist",
     "seed:admin": "bun run scripts/seedAdmin.ts",
