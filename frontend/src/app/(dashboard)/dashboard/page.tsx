@@ -2,6 +2,9 @@ import { fetchDashboardStatsServer, fetchTasksServer } from '@/lib/server-api-cl
 import { DashboardContent } from '@/components/dashboard/DashboardContent';
 import type { DashboardStats, PaginatedResponse, Task, ApiResponse } from '@/types';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   // Fetch data on the server
   const [statsResponse, tasksResponse] = await Promise.all([
