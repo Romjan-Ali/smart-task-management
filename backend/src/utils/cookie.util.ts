@@ -12,13 +12,15 @@ export class CookieUtil {
       httpOnly?: boolean
       secure?: boolean
       sameSite?: 'strict' | 'lax' | 'none'
+      path?: string
     } = {}
   ) {
     const defaultOptions = {
       maxAge: config.COOKIE_MAX_AGE,
       httpOnly: config.COOKIE_HTTP_ONLY,
       secure: config.COOKIE_SECURE,
-      sameSite: config.COOKIE_SAME_SITE as 'strict' | 'lax' | 'none',
+      sameSite: config.COOKIE_SAME_SITE,
+      path: '/', // Ensure cookie is available for all paths
     }
 
     res.cookie(name, value, { ...defaultOptions, ...options })
@@ -26,9 +28,10 @@ export class CookieUtil {
 
   static clearCookie(res: Response, name: string) {
     res.clearCookie(name, {
-      httpOnly: true,
-      secure: config.NODE_ENV === 'production',
-      sameSite: 'strict',
+      httpOnly: config.COOKIE_HTTP_ONLY,
+      secure: config.COOKIE_SECURE,
+      sameSite: config.COOKIE_SAME_SITE,
+      path: '/', // Must match the path used when setting the cookie
     })
   }
 }

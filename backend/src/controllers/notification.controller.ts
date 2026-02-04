@@ -1,7 +1,7 @@
 // backend/src/controllers/notification.controller.ts
 import type { Response, NextFunction } from 'express'
 import type { AuthRequest } from '../types'
-import { Notification } from '../models/Notification'
+import { NotificationService } from '../services/notification.service'
 
 export const notificationController = {
   /**
@@ -20,35 +20,18 @@ export const notificationController = {
 
       const pageNum = parseInt(page as string, 10)
       const limitNum = parseInt(limit as string, 10)
-      const skip = (pageNum - 1) * limitNum
 
-      const filter: any = { recipient: req.user.userId }
-      if (unreadOnly === 'true') {
-        filter.isRead = false
-      }
-
-      const [notifications, total, unreadCount] = await Promise.all([
-        Notification.find(filter)
-          .populate('task', 'title')
-          .populate('workflow', 'name')
-          .populate('triggeredBy', 'name email')
-          .sort({ createdAt: -1 })
-          .skip(skip)
-          .limit(limitNum),
-        Notification.countDocuments(filter),
-        Notification.countDocuments({ recipient: req.user.userId, isRead: false }),
-      ])
+      const result = await NotificationService.getUserNotifications(req.user.userId, {
+        page: pageNum,
+        limit: limitNum,
+        unreadOnly: unreadOnly === 'true',
+      })
 
       res.json({
         success: true,
-        data: notifications,
-        pagination: {
-          page: pageNum,
-          limit: limitNum,
-          total,
-          pages: Math.ceil(total / limitNum),
-        },
-        unreadCount,
+        data: result.notifications,
+        pagination: result.pagination,
+        unreadCount: result.unreadCount,
       })
     } catch (error) {
       next(error)
@@ -76,22 +59,13 @@ export const notificationController = {
         })
       }
 
-      const notification = await Notification.findOne({
-        _id: id,
-        recipient: req.user.userId,
-      })
+      const notification = await NotificationService.markNotificationAsRead(id, req.user.userId)
 
       if (!notification) {
         return res.status(404).json({
           success: false,
           error: 'Notification not found',
         })
-      }
-
-      if (!notification.isRead) {
-        notification.isRead = true
-        notification.readAt = new Date()
-        await notification.save()
       }
 
       res.json({
@@ -115,17 +89,12 @@ export const notificationController = {
         })
       }
 
-      const result = await Notification.updateMany(
-        { recipient: req.user.userId, isRead: false },
-        { isRead: true, readAt: new Date() }
-      )
+      const result = await NotificationService.markAllAsRead(req.user.userId)
 
       res.json({
         success: true,
         message: `Marked ${result.modifiedCount} notifications as read`,
-        data: {
-          modifiedCount: result.modifiedCount,
-        },
+        data: result,
       })
     } catch (error) {
       next(error)
@@ -153,10 +122,7 @@ export const notificationController = {
         })
       }
 
-      const notification = await Notification.findOneAndDelete({
-        _id: id,
-        recipient: req.user.userId,
-      })
+      const notification = await NotificationService.deleteNotification(id, req.user.userId)
 
       if (!notification) {
         return res.status(404).json({
@@ -186,10 +152,7 @@ export const notificationController = {
         })
       }
 
-      const count = await Notification.countDocuments({
-        recipient: req.user.userId,
-        isRead: false,
-      })
+      const count = await NotificationService.getUnreadCount(req.user.userId)
 
       res.json({
         success: true,

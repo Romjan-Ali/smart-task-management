@@ -35,7 +35,7 @@ export default function AnalyticsPage() {
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
               <CardHeader>
-                <Skeleton className="h-6 w-[150px]" />
+                <Skeleton className="h-6 w-37.5" />
               </CardHeader>
               <CardContent>
                 <Skeleton className="h-32 w-full" />
