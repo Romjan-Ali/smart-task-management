@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useCreateTaskMutation, useUpdateTaskMutation } from '@/store/api/taskApi';
-import { useGetDefaultWorkflowsQuery } from '@/store/api/workflowApi';
+import { useGetWorkflowsQuery } from '@/store/api/workflowApi';
 import { useGetUsersQuery } from '@/store/api/userApi';
 import {
   Dialog,
@@ -31,7 +31,7 @@ interface TaskFormDialogProps {
 export function TaskFormDialog({ open, onOpenChange, task, initialTask, defaultWorkflowId }: TaskFormDialogProps) {
   const [createTask, { isLoading: isCreating }] = useCreateTaskMutation();
   const [updateTask, { isLoading: isUpdating }] = useUpdateTaskMutation();
-  const { data: workflowsData } = useGetDefaultWorkflowsQuery();
+  const { data: workflowsData } = useGetWorkflowsQuery();
   const { data: usersData } = useGetUsersQuery();
 
   const editingTask = task || initialTask;

@@ -87,21 +87,9 @@ export class TaskService {
     userId: Types.ObjectId | string,
     userRole: string
   ): Promise<boolean> {
-    // Admins can modify all tasks
-    if (userRole === 'admin') return true
-
-    const task = await Task.findById(taskId)
-    if (!task) return false
-
-    // Managers can modify tasks they created
-    if (userRole === 'manager' && task.createdBy.toString() === userId.toString()) {
-      return true
-    }
-
-    // Members can modify tasks assigned to them
-    if (userRole === 'member') {
-      return task.assignedTo.some((id) => id.toString() === userId.toString())
-    }
+    // Only Admins and Managers can modify tasks
+    // Members can only view their assigned tasks
+    if (userRole === 'admin' || userRole === 'manager') return true
 
     return false
   }

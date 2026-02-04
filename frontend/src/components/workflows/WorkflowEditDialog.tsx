@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useSession } from 'next-auth/react';
 import { useUpdateWorkflowMutation, useDeleteWorkflowMutation } from '@/store/api/workflowApi';
 import {
   Dialog,
@@ -43,6 +44,10 @@ const defaultColors = [
 ];
 
 export function WorkflowEditDialog({ workflow, open, onOpenChange }: WorkflowEditDialogProps) {
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+  const canEdit = userRole === 'admin' || userRole === 'manager';
+  
   const [updateWorkflow, { isLoading: isUpdating }] = useUpdateWorkflowMutation();
   const [deleteWorkflow, { isLoading: isDeleting }] = useDeleteWorkflowMutation();
 
@@ -192,12 +197,12 @@ export function WorkflowEditDialog({ workflow, open, onOpenChange }: WorkflowEdi
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div>
-              <DialogTitle>Edit Workflow</DialogTitle>
+              <DialogTitle>{canEdit ? 'Edit Workflow' : 'View Workflow'}</DialogTitle>
               <DialogDescription>
-                Update workflow details and stages
+                {canEdit ? 'Update workflow details and stages' : 'Workflow details and stages'}
               </DialogDescription>
             </div>
-            {!workflow.isDefault && (
+            {!workflow.isDefault && canEdit && (
               <Button
                 variant="destructive"
                 size="sm"
@@ -223,7 +228,7 @@ export function WorkflowEditDialog({ workflow, open, onOpenChange }: WorkflowEdi
                 placeholder="e.g., Software Development"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isUpdating || workflow.isDefault}
+                disabled={isUpdating || workflow.isDefault || !canEdit}
                 required
               />
             </div>
@@ -235,7 +240,7 @@ export function WorkflowEditDialog({ workflow, open, onOpenChange }: WorkflowEdi
                 placeholder="Describe this workflow (optional)"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                disabled={isUpdating || workflow.isDefault}
+                disabled={isUpdating || workflow.isDefault || !canEdit}
                 className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
               />
             </div>
@@ -347,18 +352,29 @@ export function WorkflowEditDialog({ workflow, open, onOpenChange }: WorkflowEdi
             </div>
           </div>
 
-          {!workflow.isDefault && (
+          {!workflow.isDefault && canEdit && (
             <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)} 
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
                 disabled={isUpdating}
               >
                 Cancel
               </Button>
               <Button type="submit" disabled={isUpdating}>
                 {isUpdating ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          )}
+          {!canEdit && (
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Close
               </Button>
             </DialogFooter>
           )}
