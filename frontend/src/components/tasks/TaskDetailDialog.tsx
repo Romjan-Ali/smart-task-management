@@ -17,9 +17,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Calendar, User, Clock, Edit } from 'lucide-react';
+import { Calendar, User, Clock, Edit, Trash2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useGetTaskByIdQuery } from '@/store/api/taskApi';
+import { useGetTaskByIdQuery, useDeleteTaskMutation } from '@/store/api/taskApi';
+import { toast } from 'sonner';
 import type { Task, User as UserType, WorkflowStage } from '@/types';
 
 type CodeProps = ComponentProps<'code'> & { inline?: boolean };
@@ -33,6 +34,7 @@ interface TaskDetailDialogProps {
 
 export function TaskDetailDialog({ task, open, onOpenChange, onEdit }: TaskDetailDialogProps) {
   const { data: session } = useSession();
+  const [deleteTask, { isLoading: isDeleting }] = useDeleteTaskMutation();
 
   const taskId = task?._id;
   const { data: detailData, isLoading: detailLoading } = useGetTaskByIdQuery(taskId as string, {
@@ -86,6 +88,51 @@ export function TaskDetailDialog({ task, open, onOpenChange, onEdit }: TaskDetai
     }
     
     return false;
+  };
+
+  // Check if user can delete this task
+  const canDelete = () => {
+    if (!session?.user) return false;
+    
+    const userRole = session.user.role;
+    const userId = session.user.id;
+    
+    // Admin can delete all tasks
+    if (userRole === 'admin') return true;
+    
+    // Task creator can delete their own tasks
+    const creatorId = typeof taskData.createdBy === 'string' ? taskData.createdBy : taskData.createdBy._id;
+    return creatorId === userId;
+  };
+
+  // Handle task deletion
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await deleteTask(taskData._id).unwrap();
+      toast.success('Task deleted successfully');
+      onOpenChange(false);
+    } catch (error: unknown) {
+      console.error('Error deleting task:', error);
+      
+      let errorMessage = 'Failed to delete task';
+      
+      if (error && typeof error === 'object') {
+        if ('data' in error) {
+          const errorData = error.data as { error?: string };
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } else if ('message' in error) {
+          errorMessage = (error as { message: string }).message;
+        }
+      }
+      
+      toast.error(errorMessage);
+    }
   };
 
   const currentStage = typeof taskData.currentStage === 'string' 
@@ -325,19 +372,34 @@ export function TaskDetailDialog({ task, open, onOpenChange, onEdit }: TaskDetai
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
-          {canEdit() && onEdit && (
-            <Button onClick={() => {
-              onEdit(taskData);
-              onOpenChange(false);
-            }}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Task
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <div className="flex gap-2 flex-1">
+            {canDelete() && (
+              <Button 
+                variant="destructive" 
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex-1 sm:flex-initial"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Close
             </Button>
-          )}
+            {canEdit() && onEdit && (
+              <Button onClick={() => {
+                onEdit(taskData);
+                onOpenChange(false);
+              }}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Task
+              </Button>
+            )}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

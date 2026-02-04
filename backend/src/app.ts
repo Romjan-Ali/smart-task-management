@@ -29,7 +29,7 @@ app.use(
     credentials: true,
   })
 )
-app.use(morgan(config.NODE_ENV === 'production' ? 'combined' : 'dev'))
+app.use(morgan('combined'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser(config.COOKIE_SECRET))
